@@ -1,0 +1,20 @@
+Type: Package
+Package: predicteD
+Title: Functions that help to create predictive Shiny apps
+Version: 0.0.0.9000
+Authors@R: c(person(given = "Jan",
+           family = "Brederecke",
+           role = c("aut", "cre"),
+           email = "j.brederecke@uke.de",
+           comment = c(ORCID = "0000-0003-1457-9255"))
+Description: This package includes functions that were written to make data
+             creation of predictive apps quicker and easier.
+Depends: R (>= 3.6.0)
+Imports: tidyverse, labelled
+Suggests: knitr, kableExtra
+License: MIT
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
