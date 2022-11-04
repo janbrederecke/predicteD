@@ -1,3 +1,21 @@
+#' @title wb_get_info
+#'
+#' @description Generic function to create HTML tables from lists of results
+#'
+#' @param fit
+#' @param timestart
+#' @param timestop
+#' @param status
+#' @param weights
+#' @param inits
+#' @param method
+#' @param control
+#' @param proportional
+#' @param params_greater_one
+#' @param ... Additional arguments to be passed to the function.
+#' @export
+#'
+
 wb_get_info <-
   function(fit,
            timestart,

@@ -1,3 +1,14 @@
+#' @title wb_eventprob_nodata
+#'
+#' @description Retrieves the event probabilites without the original data
+#'
+#' @param wb_info The output of a former wb_get_info() function.
+#' package.
+#' @param timepoint The desired timepoint for the event probabilities.
+#' @param newdata 
+#' @param timestart
+#' @export
+#'
 wb_eventprob_nodata <-
   function(wb_info,
            timepoint = 10,

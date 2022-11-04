@@ -1,0 +1,268 @@
+---
+title: "Predict From Cox-Regression Using Weibull Baseline Hazard Without Exposing Data to the Public"
+date: "`r Sys.Date()`"
+author: "Jan Brederecke"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  pdf_document:
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Preliminaries
+```{r}
+set.seed(1234)
+# load packages
+rm(list = ls())
+library(here)
+library(survival)
+library(pmisc)
+library(dplyr)
+
+if (!"predicteD" %in% rownames(installed.packages())) {
+    print("predicteD not installed, installing.")
+    devtools::install_github("janbrederecke/predicteD")
+} else {
+    print("predicteD is installed.")
+}
+
+library(predicteD)
+
+# load dataset
+df <- cancer
+
+# recode event variable
+df$status <- df$status - 1
+
+# recode sex variable 
+df$sex <- df$sex - 1 
+
+# get event-age
+df$eventage <- df$age + (df$time / 365.25)
+
+# keep only complete cases
+df <- df[complete.cases(df),]
+
+# get some patients for a testset
+df$id <- 1:nrow(df)
+df_test <- df[sample(df$id, 5),]
+df <- df[which(!df$id %in% df_test$id),]
+
+# fill in arbitrary values for outcome and eventage in the testdata
+# this is needed for the code to work
+df_test$eventage <- df_test$age + 2
+df_test$status <- 0
+
+```
+
+# Calculate Cox-Model Using Age as the Timescale
+## We use NO strata
+```{r}
+formula <- as.formula(paste("Surv(age, eventage, status) ~ ",
+                            paste(
+                              c(
+                                "ph.ecog",
+                                "ph.karno",
+                                "pat.karno",
+                                "meal.cal",
+                                "wt.loss",
+                                "sex"
+                              ),
+                              collapse = " + "
+                            )))
+
+cox_fit <- coxph(formula, df, model = TRUE, x = FALSE)
+```
+# Predict 2 Year survival Using Weibull Baseline Hazard
+## Expecting the Dataset in the Cox-Model
+```{r}
+# Predict event-probabilities
+Wb_EventProb(
+  cox_fit,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age",
+  control = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  ),
+  param = NULL
+)
+```
+## Calculating the Weibull-Parameters upfront (No Data in the Cox-Model Needed)
+### This Only Works When NO Strata Were Used!
+```{r}
+# Calculate the parameters for the Weibull baseline hazard
+wb_fit <- Wb_fit(
+  timestart = df$age,
+  timestop  = df$eventage,
+  status    = df$status,
+  expLP     = exp(predict(cox_fit, type = "lp")),
+  weights   = NULL,
+  control   = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  )
+)
+
+# Remove data from the Cox-model
+cox_fit$model <- NULL
+
+# Remove data from environment
+keep_data_new_name <- df
+rm(df)
+
+# Predict event-probabilities 
+Wb_EventProb(
+  fit = cox_fit,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age",
+  control = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  ),
+  param = cbind(rep(wb_fit[, 1], length(cox_fit$y)),
+                rep(wb_fit[, 2], length(cox_fit$y)))
+)
+rm(cox_fit, formula, wb_fit)
+```
+# Calculate Cox Model Using Age as the Time Scale
+## We Use Strata
+```{r}
+formula <- as.formula(paste(
+  "Surv(age, eventage, status) ~ ",
+  paste(
+    c("ph.ecog", "ph.karno", "pat.karno", "meal.cal", "wt.loss"),
+    collapse = " + "
+  ),
+  " + strata(sex)"
+)) 
+
+df <- keep_data_new_name
+rm(keep_data_new_name)
+
+cox_fit <- coxph(formula, df, model = TRUE)
+```
+# Predict 2 Year survival Using Weibull Baseline Hazard
+## Expecting the Dataset in the Cox-Model
+```{r}
+# Predict event-probabilities
+Wb_EventProb(
+  cox_fit,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age",
+  control = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  ),
+  param = NULL
+)
+```
+## Calculating the Weibull-Parameters upfront (No Data in the Cox-Model Needed)
+This is not easily possible because FOE's functions need the data to get strata.
+Two possible solutions: Write formula from scratch or modify the Wb_EventProb
+function to get the strata without data.
+```{r}
+# Calculate the parameters for the Weibull baseline hazard
+## This function does NOT calculate strata-specfic parameters
+## the results using this single set of parameters will thus differ from the
+## results above (Wb_EventProb does internally calculate Weibull parameters for
+## every stratum)
+wb_fit <- Wb_fit(
+  timestart = df$age,
+  timestop  = df$eventage,
+  status    = df$status,
+  expLP     = exp(predict(cox_fit, type = "lp")),
+  weights   = NULL,
+  control   = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  )
+)
+
+# Remove data from the Cox-model
+# We cannot remove the data for this exercise as Wb_EventProb needs the original
+# data to get the strata
+
+# Predict event-probabilities
+Wb_EventProb(
+  fit = cox_fit,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age",
+  control = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  ),
+  param = cbind(rep(wb_fit[, 1], length(cox_fit$y)),
+                rep(wb_fit[, 2], length(cox_fit$y)))
+)
+
+# We see that the results differ which is due to the single set of Weibull 
+# parameters used.
+# We still use the original data in this exercise! 
+```
+As this is unsatisfying and would expose the data to the public when used e.g.
+in a Shiny-app, we need to extract the formula and predict manually.
+
+We use the new function "Wb_GetInfo" to extract the needed information from the
+Cox-model and the original data
+```{r}
+wb_info <- predicteD::wb_get_info(
+  cox_fit,
+  timestart = df$age,
+  timestop = df$eventage,
+  status = df$status
+)
+
+# This object contains all the information needed for prediction via
+# Weibull-Cox model but NO data!
+# This object has to be put into the second function that predicts probability
+# of survival
+```
+We use the additional new function "Wb_EventProb_nodata" to predict from the
+object retrieved via "Wb_GetInfo"
+```{r}
+# Predict event-probabilities
+source(paste0(here(), "/Wb_EventProb_nodata.R"))  
+ 
+Wb_EventProb_nodata(
+  wb_info,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age"
+)
+```
+We compare the results to the results we get via the old "Wb_EventProb" function
+that is included in pmisc
+```{r}
+# Compare to the function that uses the original data again:
+Wb_EventProb(
+  cox_fit,
+  timepoint = 2,
+  newdata = df_test,
+  newdata_timestart = "age",
+  control = list(
+    fnscale = -1,
+    parscale = c(0.1, 0.1),
+    maxit = 2000
+  ),
+  param = NULL
+)
+```
+# System Information
+```{r}
+sessionInfo()
+```
