@@ -14,7 +14,11 @@ editor_options:
 ---
 
 # Preliminaries
-```{r}
+
+We use the *pmisc* package (only internally available at UKE) and the
+[*predicteD*](https://www.github.com/janbrederecke/predicteD) package. 
+
+```{r message = FALSE}
 set.seed(1234)
 # load packages
 rm(list = ls())
@@ -169,7 +173,8 @@ Wb_EventProb(
 )
 ```
 ## Calculating the Weibull-Parameters upfront (No Data in the Cox-Model Needed)
-This is not easily possible because FOE's functions need the data to get strata.
+This is not easily possible because *pmisc* functions need the data to get
+strata.
 Two possible solutions: Write formula from scratch or modify the Wb_EventProb
 function to get the strata without data.
 ```{r}
@@ -217,8 +222,8 @@ Wb_EventProb(
 As this is unsatisfying and would expose the data to the public when used e.g.
 in a Shiny-app, we need to extract the formula and predict manually.
 
-We use the new function "Wb_GetInfo" to extract the needed information from the
-Cox-model and the original data
+We use the new function "wb_get_info" to extract the needed information from the
+Cox-model and the original data. This function is included in *predicteD*.
 ```{r}
 wb_info <- predicteD::wb_get_info(
   cox_fit,
@@ -232,35 +237,45 @@ wb_info <- predicteD::wb_get_info(
 # This object has to be put into the second function that predicts probability
 # of survival
 ```
-We use the additional new function "Wb_EventProb_nodata" to predict from the
-object retrieved via "Wb_GetInfo"
+We use the additional new function "wb_eventprob_nodata" to predict from the
+object retrieved via "wb_get_info". This function is also available through
+*predicteD*.
 ```{r}
 # Predict event-probabilities  
  
-predicteD::wb_eventprob_nodata(
-  wb_info,
-  .timepoint = 2,
-  .newdata = df_test,
-  .newdata_timestart = "age"
-)
+new_results <- predicteD::wb_eventprob_nodata(
+                                              wb_info,
+                                              .timepoint = 2,
+                                              .newdata = df_test,
+                                              .newdata_timestart = "age"
+                                            )
+print(new_results)
 ```
 We compare the results to the results we get via the old "Wb_EventProb" function
-that is included in pmisc
+that is included in pmisc.
 ```{r}
 # Compare to the function that uses the original data again:
-Wb_EventProb(
-  cox_fit,
-  timepoint = 2,
-  newdata = df_test,
-  newdata_timestart = "age",
-  control = list(
-    fnscale = -1,
-    parscale = c(0.1, 0.1),
-    maxit = 2000
-  ),
-  param = NULL
-)
+old_results <- Wb_EventProb(
+                            cox_fit,
+                            timepoint = 2,
+                            newdata = df_test,
+                            newdata_timestart = "age",
+                            control = list(
+                              fnscale = -1,
+                              parscale = c(0.1, 0.1),
+                              maxit = 2000
+                            ),
+                            param = NULL
+                          )
+print(old_results)
 ```
+
+We check that both results are perfectily equal:
+
+```{r}
+print(old_results == new_results)
+```
+
 # System Information
 ```{r}
 sessionInfo()
