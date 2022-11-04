@@ -28,7 +28,7 @@ wb_eventprob_nodata <- function(.wb_info
     rm(n_newdata)
 
     # Calculate linear predictor in newdata
-    for (i in seq_len(nrow(.newdata))) {
+    for (i in 1:nrow(.newdata)) {
       stratum <- .newdata[i, .wb_info[["strata_variable"]]]
 
       ## Add the Wb parameters by stratum and row in newdata
