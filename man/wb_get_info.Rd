@@ -5,20 +5,17 @@
 \title{wb_get_info}
 \usage{
 wb_get_info(
-  fit,
-  timestart,
-  timestop,
-  status,
-  weights = NULL,
-  inits = log(c(6, 100)),
-  method = "Nelder-Mead",
-  control = list(fnscale = -1, parscale = c(0.1, 0.1), maxit = 2000),
-  proportional = TRUE,
-  params_greater_one = FALSE
+  .fit,
+  .timestart,
+  .timestop,
+  .status,
+  .weights = NULL,
+  .inits = log(c(6, 100)),
+  .method = "Nelder-Mead",
+  .control = list(fnscale = -1, .parscale = c(0.1, 0.1), .maxit = 2000),
+  .proportional = TRUE,
+  .params_greater_one = FALSE
 )
-}
-\arguments{
-\item{...}{Additional arguments to be passed to the function.}
 }
 \description{
 Generic function to create HTML tables from lists of results

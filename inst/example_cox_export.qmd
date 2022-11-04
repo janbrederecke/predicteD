@@ -13,9 +13,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 # Preliminaries
 ```{r}
 set.seed(1234)
@@ -25,6 +22,15 @@ library(here)
 library(survival)
 library(pmisc)
 library(dplyr)
+
+if (!"predicteD" %in% rownames(installed.packages())) {
+    print("predicteD not installed, installing.")
+    devtools::install_github("janbrederecke/predicteD")
+} else {
+    print("predicteD is installed.")
+}
+
+library(predicteD)
 
 # load dataset
 df <- cancer
@@ -52,6 +58,7 @@ df_test$eventage <- df_test$age + 2
 df_test$status <- 0
 
 ```
+
 # Calculate Cox-Model Using Age as the Timescale
 ## We use NO strata
 ```{r}
@@ -213,8 +220,7 @@ in a Shiny-app, we need to extract the formula and predict manually.
 We use the new function "Wb_GetInfo" to extract the needed information from the
 Cox-model and the original data
 ```{r}
-source(paste0(here(), "/Wb_GetInfo.R"))
-wb_info <- Wb_GetInfo(
+wb_info <- predicteD::wb_get_info(
   cox_fit,
   timestart = df$age,
   timestop = df$eventage,
@@ -229,10 +235,9 @@ wb_info <- Wb_GetInfo(
 We use the additional new function "Wb_EventProb_nodata" to predict from the
 object retrieved via "Wb_GetInfo"
 ```{r}
-# Predict event-probabilities
-source(paste0(here(), "/Wb_EventProb_nodata.R"))  
+# Predict event-probabilities  
  
-Wb_EventProb_nodata(
+predicteD::wb_eventprob_nodata(
   wb_info,
   timepoint = 2,
   newdata = df_test,
@@ -260,4 +265,3 @@ Wb_EventProb(
 ```{r}
 sessionInfo()
 ```
-

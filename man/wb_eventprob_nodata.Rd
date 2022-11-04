@@ -4,15 +4,13 @@
 \alias{wb_eventprob_nodata}
 \title{wb_eventprob_nodata}
 \usage{
-wb_eventprob_nodata(wb_info, timepoint = 10, newdata, newdata_timestart)
+wb_eventprob_nodata(.wb_info, .timepoint = 10, .newdata, .newdata_timestart)
 }
 \arguments{
-\item{wb_info}{The output of a former wb_get_info() function.
+\item{.wb_info}{The output of a former wb_get_info() function.
 package.}
 
-\item{timepoint}{The desired timepoint for the event probabilities.}
-
-\item{newdata}{}
+\item{.timepoint}{The desired timepoint for the event probabilities.}
 }
 \description{
 Retrieves the event probabilites without the original data
