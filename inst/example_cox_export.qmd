@@ -222,9 +222,9 @@ Cox-model and the original data
 ```{r}
 wb_info <- predicteD::wb_get_info(
   cox_fit,
-  timestart = df$age,
-  timestop = df$eventage,
-  status = df$status
+  .timestart = df$age,
+  .timestop = df$eventage,
+  .status = df$status
 )
 
 # This object contains all the information needed for prediction via
@@ -239,9 +239,9 @@ object retrieved via "Wb_GetInfo"
  
 predicteD::wb_eventprob_nodata(
   wb_info,
-  timepoint = 2,
-  newdata = df_test,
-  newdata_timestart = "age"
+  .timepoint = 2,
+  .newdata = df_test,
+  .newdata_timestart = "age"
 )
 ```
 We compare the results to the results we get via the old "Wb_EventProb" function

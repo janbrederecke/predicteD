@@ -12,7 +12,7 @@ wb_get_info(
   .weights = NULL,
   .inits = log(c(6, 100)),
   .method = "Nelder-Mead",
-  .control = list(fnscale = -1, .parscale = c(0.1, 0.1), .maxit = 2000),
+  .control = list(fnscale = -1, parscale = c(0.1, 0.1), maxit = 2000),
   .proportional = TRUE,
   .params_greater_one = FALSE
 )
