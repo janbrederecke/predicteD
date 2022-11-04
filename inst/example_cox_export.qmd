@@ -2,13 +2,13 @@
 title: "Predict From Cox-Regression Using Weibull Baseline Hazard Without Exposing Data to the Public"
 date: "`r Sys.Date()`"
 author: "Jan Brederecke"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-    code_folding: show
-  pdf_document:
-    toc: yes
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc-float: yes
+    smooth-scroll: true
+code-fold: show
 editor_options: 
   chunk_output_type: console
 ---
